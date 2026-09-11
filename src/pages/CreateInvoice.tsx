@@ -1,14 +1,17 @@
 import { useState } from "react";
 import type { InvoiceItem, PaymentMethod } from "../types/invoice";
 import { addInvoice } from "../utils/storage";
-
+import {
+  vehicleData,
+  type VehicleBrand,
+} from "../data/vehicleData";
 
 function CreateInvoice() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
-  const [vehicleBrand, setVehicleBrand] = useState("");
+  const [vehicleBrand, setVehicleBrand] = useState<VehicleBrand | "">("");
   const [vehicleType, setVehicleType] = useState("");
   const [mechanic, setMechanic] = useState("");
   const [notes, setNotes] = useState("");
@@ -20,6 +23,13 @@ function CreateInvoice() {
   const [itemQuantity, setItemQuantity] = useState(1);
   const [itemPrice, setItemPrice] = useState(0);
 
+  const brands = Object.keys(
+  vehicleData
+) as VehicleBrand[];
+
+const vehicleTypes = vehicleBrand
+  ? vehicleData[vehicleBrand]
+  : [];
   const subtotal = items.reduce(
     (total, item) => total + item.total,
     0
@@ -185,29 +195,54 @@ function CreateInvoice() {
             </div>
 
             <div className="form-group">
-              <label>Merek</label>
-              <input
-                type="text"
+            <label>Merek Mobil</label>
+
+            <select
                 value={vehicleBrand}
-                onChange={(e) =>
-                  setVehicleBrand(e.target.value)
-                }
-                placeholder="Toyota"
-              />
-            </div>
+                onChange={(event) => {
+                const brand =
+                    event.target.value as VehicleBrand | "";
 
+                setVehicleBrand(brand);
+
+                // Reset tipe ketika merek berubah
+                setVehicleType("");
+                }}
+            >
+                <option value="">
+                Pilih Merek
+                </option>
+
+                {brands.map((brand) => (
+                <option key={brand} value={brand}>
+                    {brand}
+                </option>
+                ))}
+            </select>
+            </div>
             <div className="form-group">
-              <label>Tipe Kendaraan</label>
-              <input
-                type="text"
-                value={vehicleType}
-                onChange={(e) =>
-                  setVehicleType(e.target.value)
-                }
-                placeholder="Avanza"
-              />
-            </div>
+            <label>Tipe Kendaraan</label>
 
+            <select
+                value={vehicleType}
+                disabled={!vehicleBrand}
+                onChange={(event) =>
+                setVehicleType(event.target.value)
+                }
+            >
+                <option value="">
+                {vehicleBrand
+                    ? "Pilih Tipe Kendaraan"
+                    : "Pilih merek terlebih dahulu"}
+                </option>
+
+                {vehicleTypes.map((type) => (
+                <option key={type} value={type}>
+                    {type}
+                </option>
+                ))}
+            </select>
+            </div>
             <div className="form-group">
               <label>Mekanik</label>
               <input
