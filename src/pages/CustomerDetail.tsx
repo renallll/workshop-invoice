@@ -68,7 +68,7 @@ function CustomerDetail({
 
             <div className="payment-method">
               <span>Servis Terakhir</span>
-              <strong>{customer.lastVisit}</strong>
+              <strong>{customer.lastVisit || "-"}</strong>
             </div>
           </div>
 
@@ -114,11 +114,11 @@ function CustomerDetail({
                       <td>{invoice.invoiceNumber}</td>
                       <td>{invoice.date}</td>
                       <td>{invoice.mechanic || "-"}</td>
-                      <td>
-                        {invoice.paymentMethod
-                          ? invoice.paymentMethod.toUpperCase()
-                          : "-"}
-                      </td>
+                     <td>
+                    {invoice.paymentMethod
+                        ? invoice.paymentMethod.toUpperCase()
+                        : "-"}
+                    </td>
                       <td>
                         Rp{" "}
                         {invoice.total.toLocaleString("id-ID")}

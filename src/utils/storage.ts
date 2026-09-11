@@ -45,3 +45,34 @@ export const deleteInvoice = (id: string): void => {
 export const clearInvoices = (): void => {
   localStorage.removeItem(INVOICE_STORAGE_KEY);
 };
+
+export const findVehiclesByPlate = (
+  keyword: string
+): Invoice[] => {
+  if (!keyword.trim()) {
+    return [];
+  }
+
+  const invoices = getInvoices();
+
+  const uniqueVehicles = new Map<string, Invoice>();
+
+  invoices.forEach((invoice) => {
+    if (!invoice.vehiclePlate) {
+      return;
+    }
+
+    const plate = invoice.vehiclePlate.toUpperCase();
+
+    if (!uniqueVehicles.has(plate)) {
+      uniqueVehicles.set(plate, invoice);
+    }
+  });
+
+  return Array.from(uniqueVehicles.values()).filter(
+    (invoice) =>
+      invoice.vehiclePlate
+        ?.toUpperCase()
+        .includes(keyword.toUpperCase())
+  );
+};
