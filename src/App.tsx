@@ -11,6 +11,7 @@ import InvoiceList from "./pages/InvoiceList";
 import type { Invoice } from "./types/invoice";
 import CustomerList from "./pages/CustomerList";
 import CustomerDetail from "./pages/CustomerDetail";
+
 import type { Customer } from "./types/customer";
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
     useState<"list" | "create">("list");
 
   const [selectedCustomer, setSelectedCustomer] =
-  useState<Customer | null>(null)
+  useState<Customer | null>(null);
 
   seedInvoices();
 
@@ -63,14 +64,14 @@ function App() {
           
           <button
             className={`nav-item ${
-              page === "customer" ? "active" : ""
+              page==="customer"?"active":""
             }`}
-            onClick={() => {
+            onClick={()=>{
               setPage("customer");
               setSelectedCustomer(null);
             }}
           >
-            Data Customer
+            Customer
           </button>
 
           <button className="nav-item">
@@ -97,7 +98,11 @@ function App() {
             <h1>
               {page === "dashboard"
                 ? "Dashboard"
-                : "Invoice"}
+                : page === "invoice"
+                ? "Invoice"
+                : page === "customer"
+                ? "Customer"
+                : "Workshop"}
             </h1>
 
             <p>

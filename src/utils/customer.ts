@@ -4,16 +4,18 @@ import { getInvoices } from "./storage";
 export const getCustomers = (): Customer[] => {
   const invoices = getInvoices();
 
-  const map = new Map<string, Customer>();
+  const customerMap = new Map<string, Customer>();
 
   invoices.forEach((invoice) => {
     const key = invoice.vehiclePlate.toUpperCase();
 
-    if (!map.has(key)) {
-      map.set(key, {
+    if (!customerMap.has(key)) {
+      customerMap.set(key, {
         id: key,
+
         name: invoice.customerName,
         phone: invoice.customerPhone,
+
         vehiclePlate: invoice.vehiclePlate,
         vehicleBrand: invoice.vehicleBrand,
         vehicleType: invoice.vehicleType,
@@ -21,18 +23,26 @@ export const getCustomers = (): Customer[] => {
         totalVisits: 0,
         totalSpent: 0,
 
+        lastVisit: invoice.date,
+
         invoices: [],
       });
     }
 
-    const customer = map.get(key)!;
+    const customer = customerMap.get(key)!;
 
     customer.totalVisits += 1;
     customer.totalSpent += invoice.total;
+
     customer.invoices.push(invoice);
+
+    if (invoice.date > customer.lastVisit) {
+      customer.lastVisit = invoice.date;
+    }
   });
 
-  return Array.from(map.values()).sort((a, b) =>
-    a.name.localeCompare(b.name)
+  return Array.from(customerMap.values()).sort(
+    (a, b) =>
+      b.lastVisit.localeCompare(a.lastVisit)
   );
 };
