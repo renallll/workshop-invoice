@@ -76,3 +76,39 @@ export const findVehiclesByPlate = (
         .includes(keyword.toUpperCase())
   );
 };
+
+export const getVehicleHistory = (
+  plate: string
+): Invoice[] => {
+  if (!plate.trim()) {
+    return [];
+  }
+
+  return getInvoices()
+    .filter(
+      (invoice) =>
+        invoice.vehiclePlate?.toUpperCase() ===
+        plate.toUpperCase()
+    )
+    .sort((a, b) =>
+      b.date.localeCompare(a.date)
+    );
+};
+
+export const importInvoices = (
+  newInvoices: Invoice[]
+): number => {
+  const existing = getInvoices();
+
+  const existingNumbers = new Set(
+    existing.map((i) => i.invoiceNumber)
+  );
+
+  const filtered = newInvoices.filter(
+    (i) => !existingNumbers.has(i.invoiceNumber)
+  );
+
+  saveInvoices([...existing, ...filtered]);
+
+  return filtered.length;
+};

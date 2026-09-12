@@ -3,13 +3,25 @@ import type { InvoiceItem, PaymentMethod } from "../types/invoice";
 import {
   addInvoice,
   findVehiclesByPlate,
+  getVehicleHistory,
 } from "../utils/storage";
 import {
   vehicleData,
   type VehicleBrand,
 } from "../data/vehicleData";
+import {
+  getVehicleStatus,
+  getVehicleStatusLabel,
+} from "../utils/vehicleStatus";
 
 function CreateInvoice() {
+  const [discount, setDiscount] = useState(0);
+
+const [discountType, setDiscountType] =
+  useState<"rupiah" | "percent">("rupiah");
+
+const [serviceFee, setServiceFee] =
+  useState(0);
   // =========================
   // CUSTOMER
   // =========================
@@ -52,24 +64,47 @@ function CreateInvoice() {
   const [itemName, setItemName] = useState("");
   const [itemQuantity, setItemQuantity] = useState(1);
   const [itemPrice, setItemPrice] = useState(0);
-
+ 
   // =========================
   // VEHICLE DATA
-  // =========================
-  const brands = Object.keys(
-    vehicleData
-  ) as VehicleBrand[];
+  // ========================= 
+  const brands = Object.keys(vehicleData) as VehicleBrand[];
 
   const vehicleTypes =
     vehicleBrand && vehicleData[vehicleBrand]
       ? vehicleData[vehicleBrand]
       : [];
 
+  const vehicleHistory = getVehicleHistory(vehiclePlate);
+
+  const latestInvoice = vehicleHistory[0];
+
+  const totalSpent = vehicleHistory.reduce(
+    (sum, invoice) => sum + invoice.total,
+    0
+  );
+
+  const vehicleStatus = latestInvoice
+    ? getVehicleStatus(latestInvoice.date)
+    : "inactive";
+
+  const statusLabel =
+    getVehicleStatusLabel(vehicleStatus);
   // =========================
   // TOTAL
   // =========================
   const subtotal = items.reduce(
-    (total, item) => total + item.total,
+    (sum, item) => sum + item.total,
+    0
+  );
+
+  const discountAmount =
+    discountType === "percent"
+      ? Math.round((subtotal * discount) / 100)
+      : discount;
+
+  const total = Math.max(
+    subtotal - discountAmount + serviceFee,
     0
   );
 
@@ -307,11 +342,8 @@ function CreateInvoice() {
       items,
 
       subtotal,
-
-      discount: 0,
-
-      total: subtotal,
-
+      discount: discountAmount,
+      total,
       paymentMethod,
 
       notes:
@@ -336,6 +368,10 @@ function CreateInvoice() {
     setNotes("");
     setItems([]);
     setPaymentMethod("cash");
+
+    setDiscount(0);
+    setDiscountType("rupiah");
+    setServiceFee(0);
 
     setPlateSuggestions([]);
     setShowSuggestions(false);
@@ -408,8 +444,12 @@ function CreateInvoice() {
         <div className="form-card">
           <h3>Data Kendaraan</h3>
 
+          {vehicleHistory.length > 0 && (
+            <div className={`vehicle-status ${vehicleStatus}`}>
+              {statusLabel.emoji} {statusLabel.text}
+            </div>
+          )}
           <div className="form-grid">
-
             {/* PLAT */}
             <div className="form-group plate-search">
               <label>
@@ -785,8 +825,48 @@ function CreateInvoice() {
               </option>
             </select>
           </div>
+          <div className="form-group">
+          <label>Diskon</label>
+
+          <div className="discount-group">
+            <input
+              type="number"
+              min={0}
+              value={discount}
+              onChange={(e) =>
+                setDiscount(Number(e.target.value))
+              }
+              placeholder="0"
+            />
+
+            <select
+              value={discountType}
+              onChange={(e) =>
+                setDiscountType(
+                  e.target.value as "rupiah" | "percent"
+                )
+              }
+            >
+              <option value="rupiah">Rupiah</option>
+              <option value="percent">%</option>
+            </select>
+          </div>
         </div>
 
+        <div className="form-group">
+          <label>Biaya Tambahan</label>
+
+          <input
+            type="number"
+            min={0}
+            value={serviceFee}
+            onChange={(e) =>
+              setServiceFee(Number(e.target.value))
+            }
+            placeholder="0"
+          />
+        </div>  
+        </div>    
         {/* =========================
             CATATAN
         ========================= */}
@@ -812,17 +892,51 @@ function CreateInvoice() {
         {/* =========================
             TOTAL
         ========================= */}
-        <div className="total-card">
-          <span>
-            Subtotal
-          </span>
+        <div className="summary-card">
+          <div className="summary-row">
+            <span>Subtotal</span>
 
-          <strong>
-            Rp{" "}
-            {subtotal.toLocaleString(
-              "id-ID"
-            )}
-          </strong>
+            <strong>
+              Rp {subtotal.toLocaleString("id-ID")}
+            </strong>
+          </div>
+
+          <div className="summary-row">
+            <span>
+              Diskon
+              {discountType === "percent"
+                ? ` (${discount}%)`
+                : ""}
+            </span>
+
+            <strong>
+              - Rp {discountAmount.toLocaleString("id-ID")}
+            </strong>
+          </div>
+
+          <div className="summary-row">
+            <span>Biaya Tambahan</span>
+
+            <strong>
+              Rp {serviceFee.toLocaleString("id-ID")}
+            </strong>
+          </div>
+
+          <div className="summary-divider"></div>
+
+          <div className="summary-total">
+            <span>Total Bayar</span>
+
+            <strong>
+              Rp {total.toLocaleString("id-ID")}
+            </strong>
+          </div>
+
+          <div className="payment-badge">
+            {paymentMethod === "cash" && "💵 Cash"}
+            {paymentMethod === "qris" && "📱 QRIS"}
+            {paymentMethod === "edc" && "💳 EDC"}
+          </div>
         </div>
 
         {/* =========================
