@@ -11,6 +11,7 @@ import InvoiceList from "./pages/InvoiceList";
 import type { Invoice } from "./types/invoice";
 import CustomerList from "./pages/CustomerList";
 import CustomerDetail from "./pages/CustomerDetail";
+import ImportInvoice from "./pages/ImportInvoice";
 import type { Customer } from "./types/customer";
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
     useState<"list" | "create">("list");
 
   const [selectedCustomer, setSelectedCustomer] =
-  useState<Customer | null>(null)
+  useState<Customer | null>(null);
 
   seedInvoices();
 
@@ -31,8 +32,20 @@ function App() {
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
-          <h2>Lavender</h2>
-          <span>Car Solution</span>
+          <div className="brand-logo">
+            <div className="logo-car">
+              <span className="car-roof"></span>
+              <span className="car-body"></span>
+              <span className="car-wheel wheel-left"></span>
+              <span className="car-wheel wheel-right"></span>
+            </div>
+          </div>
+
+          <div className="brand-text">
+            <h2>Lavender</h2>
+            <span>CAR SOLUTION</span>
+            <small>Workshop & Automotive Service</small>
+          </div>
         </div>
 
         <nav className="navigation">
@@ -63,14 +76,14 @@ function App() {
           
           <button
             className={`nav-item ${
-              page === "customer" ? "active" : ""
+              page==="customer"?"active":""
             }`}
-            onClick={() => {
+            onClick={()=>{
               setPage("customer");
               setSelectedCustomer(null);
             }}
           >
-            Data Customer
+            Customer
           </button>
 
           <button className="nav-item">
@@ -88,6 +101,14 @@ function App() {
           <button className="nav-item">
             Pengaturan
           </button>
+          <button
+            className={`nav-item ${
+              page === "import" ? "active" : ""
+            }`}
+            onClick={() => setPage("import")}
+          >
+            Import Excel
+          </button>
         </nav>
       </aside>
 
@@ -97,7 +118,11 @@ function App() {
             <h1>
               {page === "dashboard"
                 ? "Dashboard"
-                : "Invoice"}
+                : page === "invoice"
+                ? "Invoice"
+                : page === "customer"
+                ? "Customer"
+                : "Workshop"}
             </h1>
 
             <p>
@@ -107,6 +132,8 @@ function App() {
         </header>
 
         <section className="content">
+          {page === "import" && <ImportInvoice />}
+
           {page === "dashboard" && (
             <>
               {!selectedInvoice ? (
