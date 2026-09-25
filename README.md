@@ -1,32 +1,64 @@
-# React + TypeScript + Vite
+# Lavender Workshop Invoice
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Lavender is a workshop and automotive service invoice management app built with React + TypeScript + Vite. It helps a car service business manage invoices, customers, vehicle history, and Excel imports in one place.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Dashboard overview for recent invoices and workshop activity
+- Create and manage invoices for services and spare parts
+- Customer list and customer detail pages
+- Vehicle plate suggestions and customer history tracking
+- Invoice import from Excel files
+- Discount, service fee, and payment method handling
+- Local browser storage persistence for workshop data
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- TypeScript
+- Vite
+- XLSX for Excel import support
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Prerequisites
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- Node.js 18 or newer
+- npm
+
+### Install dependencies
+
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Run locally
+
+```bash
+npm run dev
+```
+
+### Production build
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```text
+src/
+  components/
+  data/
+  pages/
+  types/
+  utils/
+```
+
+## Notes
+
+This project stores invoice data in browser local storage for quick workshop use. For production deployment, you may want to connect it to a backend or database.
+
+## License
+
+This project is for workshop management demo purposes.
