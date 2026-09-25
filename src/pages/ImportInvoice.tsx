@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { importLavenderExcel } from "../utils/excelImport";
 import { importInvoices } from "../utils/storage";
+import { createApiInvoice, isApiEnabled } from "../utils/api";
 
 function ImportInvoice() {
   const [loading, setLoading] = useState(false);
@@ -18,8 +19,11 @@ function ImportInvoice() {
       const invoices =
         await importLavenderExcel(file);
 
-      const imported =
-        importInvoices(invoices);
+      const invoicesToStore = isApiEnabled()
+        ? await Promise.all(invoices.map(createApiInvoice))
+        : invoices;
+
+      const imported = importInvoices(invoicesToStore);
 
       alert(
         `${imported} invoice berhasil diimport.`

@@ -5,6 +5,7 @@ import {
 import type { MouseEvent } from "react";    
 import type { Invoice, PaymentMethod } from "../types/invoice";
 import { deleteInvoice, getInvoices } from "../utils/storage";
+import { deleteApiInvoice, isApiEnabled } from "../utils/api";
 
 interface InvoiceListProps {
   onSelectInvoice: (invoice: Invoice) => void;
@@ -99,7 +100,7 @@ function InvoiceList({
     paymentFilter,
   ]);
 
-  const handleDelete = (
+  const handleDelete = async (
     event: MouseEvent,
     id: string
   ) => {
@@ -113,7 +114,19 @@ function InvoiceList({
       return;
     }
 
-    deleteInvoice(id);
+    try {
+      if (isApiEnabled()) {
+        await deleteApiInvoice(id);
+      }
+      deleteInvoice(id);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Invoice gagal dihapus."
+      );
+      return;
+    }
 
     window.location.reload();
   };
