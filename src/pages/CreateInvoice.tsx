@@ -13,6 +13,7 @@ import {
   getVehicleStatus,
   getVehicleStatusLabel,
 } from "../utils/vehicleStatus";
+import { createApiInvoice, isApiEnabled } from "../utils/api";
 
 function CreateInvoice() {
   const [discount, setDiscount] = useState(0);
@@ -261,7 +262,7 @@ const [serviceFee, setServiceFee] =
   // =========================
   // SUBMIT
   // =========================
-  const handleSubmit = (
+  const handleSubmit = async (
     event: React.FormEvent
   ) => {
     event.preventDefault();
@@ -346,7 +347,21 @@ const [serviceFee, setServiceFee] =
         notes.trim(),
     };
 
-    addInvoice(invoice);
+    try {
+      if (isApiEnabled()) {
+        const savedInvoice = await createApiInvoice(invoice);
+        addInvoice(savedInvoice);
+      } else {
+        addInvoice(invoice);
+      }
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Invoice gagal disimpan."
+      );
+      return;
+    }
 
     alert(
       `Invoice ${invoice.invoiceNumber} berhasil disimpan.`

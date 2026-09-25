@@ -14,6 +14,114 @@ import CustomerDetail from "./pages/CustomerDetail";
 import ImportInvoice from "./pages/ImportInvoice";
 import type { Customer } from "./types/customer";
 import { clearLogo, getLogo, saveLogo } from "./utils/logo";
+import {
+  getApiToken,
+  isApiConfigured,
+  isApiEnabled,
+  loginApi,
+  registerApi,
+  setApiToken,
+  syncApiInvoices,
+} from "./utils/api";
+import { saveInvoices } from "./utils/storage";
+
+function ApiLogin({
+  onAuthenticated,
+}: {
+  onAuthenticated: (token: string) => void;
+}) {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+
+    try {
+      if (mode === "register") {
+        if (!name.trim()) {
+          throw new Error("Nama wajib diisi.");
+        }
+        await registerApi(name.trim(), email.trim(), password);
+      }
+
+      const result = await loginApi(email.trim(), password);
+      setApiToken(result.token);
+      onAuthenticated(result.token);
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Autentikasi gagal."
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <main className="main-content">
+      <section className="content">
+        <div className="form-card" style={{ maxWidth: 460, margin: "80px auto" }}>
+          <h2>{mode === "login" ? "Masuk ke Workshop" : "Buat Akun Workshop"}</h2>
+          <p>Hubungkan Lavender dengan backend workshop.</p>
+          <form onSubmit={handleSubmit}>
+            {mode === "register" && (
+              <div className="form-group">
+                <label htmlFor="api-name">Nama</label>
+                <input
+                  id="api-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <div className="form-group">
+              <label htmlFor="api-email">Email</label>
+              <input
+                id="api-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="api-password">Password</label>
+              <input
+                id="api-password"
+                type="password"
+                minLength={6}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </div>
+            {error && <p role="alert">{error}</p>}
+            <button className="primary-button" type="submit" disabled={busy}>
+              {busy ? "Memproses..." : mode === "login" ? "Masuk" : "Daftar"}
+            </button>
+          </form>
+          <button
+            className="logo-action"
+            type="button"
+            onClick={() => setMode(mode === "login" ? "register" : "login")}
+          >
+            {mode === "login"
+              ? "Belum punya akun? Daftar"
+              : "Sudah punya akun? Masuk"}
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 function App() {
   const [page, setPage] = useState("dashboard");
@@ -27,11 +135,43 @@ function App() {
   const [selectedCustomer, setSelectedCustomer] =
   useState<Customer | null>(null);
   const [logo, setLogo] = useState<string | null>(() => getLogo());
+  const [apiToken, setApiTokenState] = useState<string | null>(() => getApiToken());
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    seedInvoices();
-  }, []);
+    const loadInvoices = async () => {
+      if (!isApiConfigured()) {
+        seedInvoices();
+        return;
+      }
+
+      if (!isApiEnabled()) return;
+
+      try {
+        const invoices = await syncApiInvoices();
+        if (invoices) {
+          saveInvoices(invoices);
+        }
+      } catch (error) {
+        console.error("Gagal memuat invoice dari API:", error);
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Gagal memuat data dari API."
+        );
+      }
+    };
+
+    void loadInvoices();
+  }, [apiToken]);
+
+  if (isApiConfigured() && !apiToken) {
+    return (
+      <div className="app">
+        <ApiLogin onAuthenticated={setApiTokenState} />
+      </div>
+    );
+  }
 
   const handleLogoUpload = (
     event: React.ChangeEvent<HTMLInputElement>
