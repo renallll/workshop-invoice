@@ -79,11 +79,6 @@ const [serviceFee, setServiceFee] =
 
   const latestInvoice = vehicleHistory[0];
 
-  const totalSpent = vehicleHistory.reduce(
-    (sum, invoice) => sum + invoice.total,
-    0
-  );
-
   const vehicleStatus = latestInvoice
     ? getVehicleStatus(latestInvoice.date)
     : "inactive";
@@ -307,17 +302,18 @@ const [serviceFee, setServiceFee] =
     }
 
     const now = new Date();
+    const randomSequence = crypto
+      .randomUUID()
+      .replace(/-/g, "")
+      .slice(0, 3)
+      .toUpperCase();
 
     const invoice = {
       id: crypto.randomUUID(),
 
       invoiceNumber: `INV-${now.getFullYear()}${String(
         now.getMonth() + 1
-      ).padStart(2, "0")}-${String(
-        Math.floor(
-          Math.random() * 999
-        ) + 1
-      ).padStart(3, "0")}`,
+      ).padStart(2, "0")}-${randomSequence}`,
 
       date: now
         .toISOString()

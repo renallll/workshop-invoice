@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 import { seedInvoices } from "./utils/seed";
@@ -13,6 +13,7 @@ import CustomerList from "./pages/CustomerList";
 import CustomerDetail from "./pages/CustomerDetail";
 import ImportInvoice from "./pages/ImportInvoice";
 import type { Customer } from "./types/customer";
+import { clearLogo, getLogo, saveLogo } from "./utils/logo";
 
 function App() {
   const [page, setPage] = useState("dashboard");
@@ -25,26 +26,87 @@ function App() {
 
   const [selectedCustomer, setSelectedCustomer] =
   useState<Customer | null>(null);
+  const [logo, setLogo] = useState<string | null>(() => getLogo());
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
-  seedInvoices();
+  useEffect(() => {
+    seedInvoices();
+  }, []);
+
+  const handleLogoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Logo harus berupa file gambar.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Ukuran logo maksimal 2 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        alert("Logo gagal dibaca.");
+        return;
+      }
+
+      saveLogo(reader.result);
+      setLogo(reader.result);
+    };
+    reader.onerror = () => alert("Logo gagal dibaca.");
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const handleLogoRemove = () => {
+    clearLogo();
+    setLogo(null);
+  };
 
   return (
     <div className="app">
       <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-logo">
-            <div className="logo-car">
-              <span className="car-roof"></span>
-              <span className="car-body"></span>
-              <span className="car-wheel wheel-left"></span>
-              <span className="car-wheel wheel-right"></span>
-            </div>
-          </div>
+        <div className={`brand ${logo ? "has-custom-logo" : ""}`}>
+          <button
+            type="button"
+            className="brand-logo-button"
+            onClick={() => logoInputRef.current?.click()}
+            title="Unggah logo"
+          >
+            {logo ? (
+              <img src={logo} alt="Logo workshop" className="custom-logo" />
+            ) : (
+              <span className="brand-logo-fallback">LCS</span>
+            )}
+          </button>
+          <input
+            ref={logoInputRef}
+            className="visually-hidden"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            onChange={handleLogoUpload}
+          />
 
           <div className="brand-text">
             <h2>Lavender</h2>
             <span>CAR SOLUTION</span>
             <small>Workshop & Automotive Service</small>
+            <button
+              type="button"
+              className="logo-action"
+              onClick={logo ? handleLogoRemove : () => logoInputRef.current?.click()}
+            >
+              {logo ? "Hapus logo" : "Unggah logo"}
+            </button>
           </div>
         </div>
 

@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx";
 import type { Invoice, InvoiceItem, PaymentMethod } from "../types/invoice";
 
 const parseNumber = (value: unknown): number => {
@@ -6,18 +5,10 @@ const parseNumber = (value: unknown): number => {
   return Number(String(value).replace(/[^\d.-]/g, "")) || 0;
 };
 
-const parsePayment = (value: unknown): PaymentMethod => {
-  const text = String(value || "").toLowerCase();
-
-  if (text.includes("qris")) return "qris";
-  if (text.includes("edc")) return "edc";
-
-  return "cash";
-};
-
 export const importLavenderExcel = async (
   file: File
 ): Promise<Invoice[]> => {
+  const XLSX = await import("xlsx");
   const buffer = await file.arrayBuffer();
 
   const workbook = XLSX.read(buffer, {
